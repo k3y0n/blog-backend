@@ -7,7 +7,7 @@ const app = new express();
 const PORT = 1010;
 
 mongoose
-  .connect("mongodb+srv://vlaconory:111@blog-app-cluster.oonguwk.mongodb.net/")
+  .connect("mongodb+srv://vlaconory:111@blog-app-cluster.oonguwk.mongodb.net/blog?")
   .then(() => console.log("DB ok"))
   .catch((err) => console.log("DB error", err));
 

@@ -4,7 +4,6 @@ import { validationResult } from "express-validator";
 import { loginValidator, registerValidator } from "../validation/index.js";
 import UserModel from "../Models/User.js";
 import jwt from "jsonwebtoken";
-import { secretKey } from "../constants/index.js";
 import { checkAuth } from "../utils/index.js";
 
 const router = express.Router({ mergeParams: true });
@@ -35,7 +34,7 @@ router.post("/login", loginValidator, async (req, res) => {
       {
         _id: user._id,
       },
-      secretKey,
+      process.env.SECRET_KEY,
       {
         expiresIn: "30d",
       }
@@ -82,7 +81,7 @@ router.post("/register", registerValidator, async (req, res) => {
       {
         _id: user._id,
       },
-      secretKey,
+      process.env.SECRET_KEY,
       {
         expiresIn: "30d",
       }

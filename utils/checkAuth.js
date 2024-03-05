@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import { secretKey } from "../constants/index.js";
 
 const checkAuth = (req, res, next) => {
   const token = (req.headers.authorization || "").replace(/Bearer\s?/, "");
@@ -11,9 +10,10 @@ const checkAuth = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, secretKey);
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
 
     req.userId = decoded._id;
+    req.body.userId = decoded._id;
     next();
   } catch (error) {
     return res.status(403).json({

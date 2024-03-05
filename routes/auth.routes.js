@@ -1,21 +1,14 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { validationResult } from "express-validator";
 import { loginValidator, registerValidator } from "../validation/index.js";
 import UserModel from "../Models/User.js";
 import jwt from "jsonwebtoken";
-import { checkAuth } from "../utils/index.js";
+import { checkAuth, handleError } from "../utils/index.js";
 
 const router = express.Router({ mergeParams: true });
 
-router.post("/login", loginValidator, async (req, res) => {
+router.post("/login", handleError, loginValidator, async (req, res) => {
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
-    }
-
     const { email, password } = req.body;
 
     const user = await UserModel.findOne({ email });
@@ -42,7 +35,7 @@ router.post("/login", loginValidator, async (req, res) => {
 
     const { passwordHash, ...userInfo } = user._doc;
 
-    res.status(200).send({
+    res.json({
       ...userInfo,
       token,
       message: "User logged in successfully",
@@ -56,14 +49,8 @@ router.post("/login", loginValidator, async (req, res) => {
   }
 });
 
-router.post("/register", registerValidator, async (req, res) => {
+router.post("/register", handleError, registerValidator, async (req, res) => {
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
-    }
-
     const { password, email, fullName, avatarUrl } = req.body;
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
@@ -89,7 +76,7 @@ router.post("/register", registerValidator, async (req, res) => {
 
     const { passwordHash, ...userInfo } = user._doc;
 
-    res.status(201).send({
+    res.status(201).json({
       ...userInfo,
       token,
       message: "User created successfully",
@@ -113,7 +100,7 @@ router.get("/me", checkAuth, async (req, res) => {
 
     const { passwordHash, ...userInfo } = user._doc;
 
-    res.status(200).send({
+    res.json({
       ...userInfo,
       message: "Success get info about me",
       code: 200,

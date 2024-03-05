@@ -1,8 +1,7 @@
 import express from "express";
-import { validationResult } from "express-validator";
 import PostsModel from "../Models/Posts.js";
 import { postCreateValidation } from "../validation/index.js";
-import { checkAuth } from "../utils/index.js";
+import { checkAuth, handleError, } from "../utils/index.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -15,7 +14,7 @@ router.get("/getAll", async (_, res) => {
       })
       .exec();
 
-    res.status(200).send({
+    res.json({
       posts,
       message: "Success",
       code: 200,
@@ -42,7 +41,7 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    res.status(200).send({
+    res.json({
       post,
       message: "Success",
       code: 200,
@@ -55,38 +54,38 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/create", checkAuth, postCreateValidation, async (req, res) => {
-  try {
-    const errors = validationResult(req);
+router.post(
+  "/create",
+  checkAuth,
+  handleError,
+  postCreateValidation,
+  async (req, res) => {
+    try {
+      const { title, text, imageUrl, tags, userId } = req.body;
 
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
+      const doc = new PostsModel({
+        title,
+        text,
+        tags,
+        user: userId,
+        imageUrl,
+      });
+
+      const post = await doc.save();
+
+      res.json({
+        post,
+        message: "Post create successfully",
+        code: 200,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Create post failed",
+        error: error.message,
+      });
     }
-
-    const { title, text, imageUrl, tags, userId } = req.body;
-
-    const doc = new PostsModel({
-      title,
-      text,
-      tags,
-      user: userId,
-      imageUrl,
-    });
-
-    const post = await doc.save();
-
-    res.status(200).send({
-      post,
-      message: "Post create successfully",
-      code: 200,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Create post failed",
-      error: error.message,
-    });
   }
-});
+);
 
 router.delete("/:id", checkAuth, async (req, res) => {
   try {
@@ -98,7 +97,7 @@ router.delete("/:id", checkAuth, async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    res.status(200).send({
+    res.json({
       post,
       message: "Post deleted successfully",
       code: 200,
@@ -133,7 +132,7 @@ router.patch("/:id", checkAuth, async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    res.status(200).send({
+    res.json({
       post,
       message: "Post updated successfully",
       code: 200,

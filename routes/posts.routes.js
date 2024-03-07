@@ -1,11 +1,11 @@
 import express from "express";
 import PostsModel from "../Models/Posts.js";
 import { postCreateValidation } from "../validation/index.js";
-import { checkAuth, handleError, } from "../utils/index.js";
+import { checkAuth, handleError } from "../utils/index.js";
 
 const router = express.Router({ mergeParams: true });
 
-router.get("/getAll", async (_, res) => {
+router.get("", async (_, res) => {
   try {
     const posts = await PostsModel.find()
       .populate({
@@ -14,14 +14,28 @@ router.get("/getAll", async (_, res) => {
       })
       .exec();
 
-    res.json({
-      posts,
-      message: "Success",
-      code: 200,
-    });
+    res.json(posts);
   } catch (error) {
     res.status(500).json({
       message: "Failed to get all posts",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/tags", async (_, res) => {
+  try {
+    const posts = await PostsModel.find().limit(5).exec();
+
+    const tags = posts
+      .map((obj) => obj.tags)
+      .flat()
+      .slice(0, 5);
+
+    res.json(tags);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to get tags",
       error: error.message,
     });
   }
@@ -41,11 +55,7 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    res.json({
-      post,
-      message: "Success",
-      code: 200,
-    });
+    res.json(post);
   } catch (error) {
     res.status(500).json({
       message: "Failed to get post",
@@ -73,11 +83,7 @@ router.post(
 
       const post = await doc.save();
 
-      res.json({
-        post,
-        message: "Post create successfully",
-        code: 200,
-      });
+      res.json(post);
     } catch (error) {
       res.status(500).json({
         message: "Create post failed",
@@ -97,11 +103,7 @@ router.delete("/:id", checkAuth, async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    res.json({
-      post,
-      message: "Post deleted successfully",
-      code: 200,
-    });
+    res.json(post);
   } catch (error) {
     res.status(500).json({
       message: "Failed to delete post",
@@ -132,11 +134,7 @@ router.patch("/:id", checkAuth, async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    res.json({
-      post,
-      message: "Post updated successfully",
-      code: 200,
-    });
+    res.json(post);
   } catch (error) {
     res.status(500).json({
       message: "Failed to update post",

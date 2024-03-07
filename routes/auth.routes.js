@@ -7,7 +7,7 @@ import { checkAuth, handleError } from "../utils/index.js";
 
 const router = express.Router({ mergeParams: true });
 
-router.post("/login", handleError, loginValidator, async (req, res) => {
+router.post("/login", loginValidator, handleError, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -35,12 +35,7 @@ router.post("/login", handleError, loginValidator, async (req, res) => {
 
     const { passwordHash, ...userInfo } = user._doc;
 
-    res.json({
-      ...userInfo,
-      token,
-      message: "User logged in successfully",
-      code: 200,
-    });
+    res.json({ ...userInfo, token });
   } catch (error) {
     res.status(500).json({
       message: "Cannot login, try later",
@@ -49,7 +44,7 @@ router.post("/login", handleError, loginValidator, async (req, res) => {
   }
 });
 
-router.post("/register", handleError, registerValidator, async (req, res) => {
+router.post("/register", registerValidator, handleError, async (req, res) => {
   try {
     const { password, email, fullName, avatarUrl } = req.body;
     const salt = await bcrypt.genSalt(10);
@@ -61,6 +56,12 @@ router.post("/register", handleError, registerValidator, async (req, res) => {
       avatarUrl,
       passwordHash: hash,
     });
+
+    const userExist = await UserModel.findOne({ email });
+
+    if (userExist) {
+      return res.status(409).json({ message: "User already exist" });
+    }
 
     const user = await document.save();
 
@@ -76,12 +77,7 @@ router.post("/register", handleError, registerValidator, async (req, res) => {
 
     const { passwordHash, ...userInfo } = user._doc;
 
-    res.status(201).json({
-      ...userInfo,
-      token,
-      message: "User created successfully",
-      code: 201,
-    });
+    res.status(201).json({ ...userInfo, token });
   } catch (error) {
     res.status(500).json({
       message: "Cannot register, try later",
@@ -100,11 +96,7 @@ router.get("/me", checkAuth, async (req, res) => {
 
     const { passwordHash, ...userInfo } = user._doc;
 
-    res.json({
-      ...userInfo,
-      message: "Success get info about me",
-      code: 200,
-    });
+    res.json(userInfo);
   } catch (error) {
     res.status(500).json({
       message: "Internal Server Error",

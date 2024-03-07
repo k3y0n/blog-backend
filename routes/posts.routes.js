@@ -49,7 +49,7 @@ router.get("/:id", async (req, res) => {
       { _id: id },
       { $inc: { viewsCount: 1 } },
       { new: true }
-    );
+    ).populate('user');
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
